@@ -1,0 +1,29 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Playwright
+/test-results/
+/playwright-report/
+/.playwright/
+
+# Reports & artifacts (generated, not committed)
+reports/allure-results/*
+!reports/allure-results/.gitkeep
+reports/allure-report/*
+!reports/allure-report/.gitkeep
+screenshots/*
+!screenshots/.gitkeep
+**/screenshots/
+logs/*
+!logs/.gitkeep
+**/logs/
+scripts/
+
+# OS
+.DS_Store
