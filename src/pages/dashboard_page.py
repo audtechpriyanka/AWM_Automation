@@ -70,7 +70,7 @@ class DashboardPage(BasePage):
         return True
 
     def expect_dashboard_content(self):
-        # Page title is often a plain text node (not always a heading role).
+        # Title is a div.crumb / currentPage, not always a heading role.
         self.expect_visible(self.recent_assignments_section())
         self.expect_visible(self.user_menu_button())
 
@@ -85,30 +85,20 @@ class DashboardPage(BasePage):
         # Assumption: logout returns to the login route.
         self.expect_url(settings.login_url)
 
-    def ensure_sidenav_labels_visible(self):
-        """Sidenav can render icon-only; expand so labels/hrefs are usable."""
-        dashboard = self.page.locator("a.sidenav-item[href='#/dashboard']")
-        # If Dashboard label text isn't visible, toggle the menu open.
-        label = self.page.locator("a.sidenav-item[href='#/dashboard']").filter(has_text="Dashboard")
-        if label.count() == 0 or not label.first.is_visible():
-            self.safe_click(self.sidenav_toggle(), "sidenav menu toggle")
-            self.expect_visible(dashboard.filter(has_text="Dashboard"))
-
     def _ensure_client_expanded(self):
-        self.ensure_sidenav_labels_visible()
-        # Expand first — do not resolve child locators while collapsed
-        # (resolve() waits for visibility and would fail).
+        # Sub-items only appear after expanding the Client group.
+        # Do NOT resolve() the child first — resolve waits for visible and
+        # fails while the group is collapsed.
         create = self.page.locator("a.sidenav-item[href='#/client/addclientform']")
         if create.count() == 0 or not create.first.is_visible():
             self.safe_click(self.sidenav_client(), "sidenav Client")
-            self.expect_visible(self.sidenav_create_client())
+        self.expect_visible(self.sidenav_create_client())
 
     def _ensure_assignment_expanded(self):
-        self.ensure_sidenav_labels_visible()
         create = self.page.locator("a.sidenav-item[href='#/assignment/create']")
         if create.count() == 0 or not create.first.is_visible():
             self.safe_click(self.sidenav_assignment(), "sidenav Assignment")
-            self.expect_visible(self.sidenav_create_assignment())
+        self.expect_visible(self.sidenav_create_assignment())
 
     def go_to_dashboard(self):
         self.safe_click(self.sidenav_dashboard(), "sidenav Dashboard")

@@ -51,7 +51,12 @@ class BasePage:
 
     @self_heal()
     def safe_fill(self, locator: Locator, value: str, description: str = ""):
-        self.logger.info("Filling '%s' into: %s", value, description or locator)
+        # Never log credential values.
+        desc = description or str(locator)
+        if "password" in desc.lower():
+            self.logger.info("Filling ******** into: %s", desc)
+        else:
+            self.logger.info("Filling '%s' into: %s", value, desc)
         locator.first.wait_for(state="visible", timeout=settings.default_timeout_ms)
         locator.first.fill(value)
 

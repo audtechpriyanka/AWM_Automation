@@ -31,8 +31,9 @@ DECLARATION_MENU_ITEM = [
 ]
 
 DASHBOARD_HEADING = [
-    lambda p: p.get_by_role("heading", name="Dashboard"),
-    lambda p: p.locator("h1, h2, h3").filter(has_text="Dashboard"),
+    lambda p: p.locator("div.link.currentPage", has_text="Dashboard"),
+    lambda p: p.locator("div.crumb", has_text="Dashboard"),
+    lambda p: p.get_by_text("Recent Assignments", exact=True),
 ]
 
 SIDENAV_DASHBOARD = [
