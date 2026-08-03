@@ -3,44 +3,39 @@
 Playwright + Pytest automation framework for the AWM (Audit Workflow
 Management) UAT application, built on a self-healing Page Object Model.
 
-This is a Playwright + Pytest automation framework for the AWM (Audit
-Workflow Management) UAT application, built on a self-healing Page Object
-Model. Login, dashboard/logout, client + assignment management, and core
-assignment-workspace flows (materiality, checklist, trial balance,
-sign-off menu, templates, etc.) are implemented. See
-[`AGENT_GUIDE.md`](./AGENT_GUIDE.md) for how to extend coverage further.
+See [`AGENT_GUIDE.md`](./AGENT_GUIDE.md) for how to explore the live app and
+extend coverage. Login is the reference pattern every other page object
+follows.
 
 ## Structure
 
 ```
 src/
-  config/settings.py       # all config — reads from .env, single source of truth
-  utilities/
-    logger.py              # get_logger(__name__) — writes to logs/
-    screenshots.py         # capture_screenshot(page, label) — writes to screenshots/, attaches to Allure
-    self_healing.py         # resolve_locator() + @self_heal() retry decorator
-  locators/                # ordered fallback locator strategies per feature
+  config/settings.py
+  utilities/               # logger, screenshots, self-healing
+  locators/                # login, dashboard, client, assignment, workspace
   pages/                   # BasePage + feature page objects
   tests/
-    conftest.py             # PageManager, browser/context config, screenshot-on-failure hook
+    conftest.py            # PageManager, browser config, screenshot-on-failure
     login_test/
     dashboard_test/
     client_test/
     assignment_test/
-    workflow_test/          # assignment workspace / audit screens
+    workflow_test/         # assignment workspace: materiality, TB, sign-off, …
     profile_test/
 reports/
-  allure-results/          # raw results (generated)
-  allure-report/           # generated HTML report (needs Allure CLI + Java)
-screenshots/               # captured on every failure + key steps
-logs/automation.log        # full run log
+  allure-results/          # raw results (written by pytest)
+  allure-report/           # HTML report (needs Allure CLI + Java)
+screenshots/
+logs/automation.log
 ```
 
 ## Setup
 
 ```bash
 cp .env.example .env
-# fill in BASE_URL, VALID_USERNAME, VALID_PASSWORD, etc. in .env
+# fill in BASE_URL, VALID_USERNAME, VALID_PASSWORD
+# optional: KNOWN_CLIENT_NAME, KNOWN_ASSIGNMENT_NAME for workspace tests
 
 make install
 ```
@@ -51,7 +46,7 @@ package — `allure-pytest` only writes the raw results. Install it via:
 ```bash
 # macOS
 brew install allure
-# or via npm
+# or via npm (also requires a working Java/JAVA_HOME)
 npm install -g allure-commandline
 ```
 
@@ -61,11 +56,11 @@ npm install -g allure-commandline
 make test               # headless run, writes reports/allure-results/
 make test-headed        # watch it run
 make test-tag TAG=smoke # run only tests marked @pytest.mark.smoke
+make report             # allure generate … (needs Allure CLI + Java)
 make report-serve       # generate + open the Allure HTML report
 ```
 
-Logs land in `logs/automation.log`. Screenshots for every failure (and
-key steps like pre/post sign-in) land in `screenshots/`.
+Latest full run (2026-08-03): **39 passed**.
 
 ## Markers
 
@@ -74,41 +69,48 @@ key steps like pre/post sign-in) land in `screenshots/`.
 
 ## Self-healing model
 
-- **Locators** are defined as ordered fallback lists in `src/locators/*.py`
-  (see `login_locators.py`). `BasePage.resolve()` tries each in order and
-  logs a warning when a fallback had to be used — check
-  `logs/automation.log` for `Locator fallback used for ...` to find
-  selectors that need the primary promoted.
-- **Actions** (`safe_click`, `safe_fill`, `safe_select`, `safe_upload`)
-  are wrapped with `@self_heal()`, which retries on failure with backoff
-  and captures a screenshot + log entry on every attempt. This handles
-  timing/flakiness, not structural app changes — a genuinely broken
-  locator still needs a source fix in `src/locators/`.
-- On any test failure, `conftest.py`'s `pytest_runtest_makereport` hook
-  captures a screenshot and logs the failing URL automatically.
+- **Locators** are ordered fallback lists in `src/locators/*.py`.
+  `BasePage.resolve()` tries each in order and logs when a fallback is used.
+- **Actions** (`safe_click`, `safe_fill`, …) use `@self_heal()` for timing
+  retries; broken selectors still need a source fix in the locators file.
+- Failures auto-capture a screenshot via `conftest.py`.
+
+## Coverage (current)
+
+| Area | What’s covered |
+|------|----------------|
+| Login | Valid / invalid / empty / old password |
+| Dashboard | Logout, user menu, sidenav Client/Assignment routes |
+| Client | Search by name, empty search, create form load + required-field guard + name boundary |
+| Assignment | List/filter/search, create form load, CREATE disabled when empty, AWM type select |
+| Workspace | Open known AWM assignment; Materiality, Planning Checklist, Risk DB, Budget; header Trial Balance / Templates / Client Queries / Audit Journal / Sampling; Sign-Off menu |
+| Profile | Profile + Change Password from user menu |
 
 ## Known limitations
 
-- **Allure HTML report generation** requires a local Java runtime (`JAVA_HOME`)
-  plus the Allure CLI. `allure-pytest` already writes raw results under
-  `reports/allure-results/` on every run; `make report` / `make report-serve`
-  will fail until Java + Allure CLI are installed (see Setup above).
-- **Create Client** coverage exercises the Basic Info step (load, required-field
-  guard, name boundary) — it does **not** submit a full 4-step client create
-  end-to-end, to avoid polluting UAT with throwaway orgs.
-- **Create Assignment** coverage validates form load, disabled CREATE when
-  empty, and AWM type selection — it does **not** persist a new assignment
-  (dates / EPR / Audit Pack prerequisites are assignment-specific).
-- **Audit workflow** tests open a known UAT assignment
-  (`KNOWN_ASSIGNMENT_NAME`, default `Test AWMS_295 3.08.2026`) and navigate
-  Materiality, Planning Checklist, Risk Database, Budget, Trial Balance,
-  Templates, Client Queries, Audit Journal, Sampling, and Sign-Off menu.
-  Nested submenu items under B3/B4/C* that use `navigate_next` (no direct
-  href) are not deep-linked yet.
-- **Data analytics / system documents / download report** are not covered as
-  dedicated modules — Templates + Sign-Off menu are the reporting surface
-  exercised so far; expand if those screens are required.
-- **Independence / Declaration** post-login redirect is intermittent on UAT;
-  smoke login currently lands on `#/dashboard` for this account but may
-  occasionally route through `#/independence/fill-template`.
-- No CI workflow file included yet (add `.github/workflows/` once desired).
+- **Allure HTML report not generated on this machine** — `reports/allure-results/`
+  is populated by pytest, but `make report` needs the Allure CLI **and** a
+  working Java (`JAVA_HOME`). Neither was available in the last run
+  environment. Install Java + Allure, then re-run `make report`.
+- **Full multi-step create flows are not automated** — Create Client stops at
+  Basic Info validation; Create Assignment does not submit a full AWM
+  engagement (dates/assignee/audit pack/cleanup). Doing so would mutate shared
+  UAT data without a guaranteed cleanup path.
+- **Nested sidenav folders (`navigate_next`)** such as Risk assessment
+  sub-trees, related-party checklists, and most C-/D- fieldwork programs are
+  not clicked through — only leaf items with direct `href`s (Materiality,
+  Planning Checklist, Budget, Audit Risk Database) plus header tools.
+- **Report download / Generate FAB** is visible in the assignment workspace
+  but not covered by an end-to-end download assertion.
+- **Role-scoped nav** — the UAT user used here exposes Dashboard / Client /
+  Assignment at the shell level. Modules like Data Analytics or System
+  Documents were not present in that sidenav and are not tested.
+- **Fixture dependency** — workspace tests need
+  `KNOWN_ASSIGNMENT_NAME` (default `Test AWMS_295 3.08.2026`) present on
+  Search Assignment. If UAT data is purged, update `.env`.
+- **Occasional post-login Independence redirect** was observed during
+  exploration (`#/independence/fill-template`); the suite currently assumes
+  a normal landing on `#/dashboard`.
+- **No CI workflow** yet (`.github/workflows/` not added).
+- Exploration helpers under `scripts/` are local-only and not part of the
+  pytest suite.

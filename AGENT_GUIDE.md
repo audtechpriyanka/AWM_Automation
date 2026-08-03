@@ -92,11 +92,12 @@ truth.
 
 - [x] Framework skeleton, POM architecture, self-healing base, logging,
       screenshot-on-failure, Allure reporting, `.env` handling — done.
-- [ ] Full page object coverage per module (see order above)
-- [ ] Positive / negative / boundary / validation tests per module
-- [ ] All tests green, or explicitly skipped with a documented reason
-- [ ] `logs/`, `screenshots/`, `reports/allure-report/` populated from a
-      real run
-- [ ] README "Known limitations" section updated to reflect actual state
-- [ ] Git commits per feature (suggested message format:
-      `feat(tests): add <feature> page object + test suite`)
+- [x] Page object coverage for login, dashboard, client, assignment,
+      assignment workspace (materiality / checklist / TB / sign-off menu /
+      header tools), profile — see README coverage table.
+- [x] Positive / negative / boundary / validation tests per covered module
+- [x] All tests green on last full run (39 passed, 2026-08-03)
+- [x] `logs/`, `screenshots/`, `reports/allure-results/` populated from a
+      real run (HTML Allure report blocked without Java — see README)
+- [x] README "Known limitations" section updated to reflect actual state
+- [x] Git commits per feature
