@@ -122,8 +122,16 @@ class AssignmentPage(BasePage):
     def click_create(self):
         self.safe_click(self.create_button(), "CREATE")
 
+    def expect_create_disabled(self):
+        """Empty required fields leave CREATE disabled (confirmed on live UAT)."""
+        from playwright.sync_api import expect
+        expect(self.create_button().first).to_be_disabled(timeout=settings.default_timeout_ms)
+
     def expect_validation_visible(self):
-        # Assumption: submitting empty form surfaces mat-error or keeps user on create URL.
+        # Prefer disabled CREATE; fall back to mat-error / still on create URL.
+        btn = self.create_button().first
+        if btn.is_disabled():
+            return
         errors = self.page.locator("mat-error, .mat-mdc-form-field-error")
         if errors.count() and errors.first.is_visible():
             return
