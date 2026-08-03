@@ -37,6 +37,13 @@ class Settings:
     invalid_password: str = os.getenv("INVALID_PASSWORD", "")
     old_password: str = os.getenv("OLD_PASSWORD", "")
 
+    # Known UAT fixtures used by assignment-workspace / workflow tests.
+    # Prefer names over hard-coded IDs — IDs rotate per assignment.
+    known_client_name: str = os.getenv("KNOWN_CLIENT_NAME", "Apex Finserve Private Limited")
+    known_assignment_name: str = os.getenv(
+        "KNOWN_ASSIGNMENT_NAME", "Test AWMS_295 3.08.2026"
+    )
+
     headless: bool = _bool("HEADLESS", True)
     slow_mo_ms: int = _int("SLOW_MO_MS", 0)
     default_timeout_ms: int = _int("DEFAULT_TIMEOUT_MS", 15000)

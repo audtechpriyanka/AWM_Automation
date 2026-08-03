@@ -11,6 +11,7 @@ from pages.login_page import LoginPage
 from pages.dashboard_page import DashboardPage
 from pages.client_page import ClientPage
 from pages.assignment_page import AssignmentPage
+from pages.workspace_page import AssignmentWorkspacePage
 from utilities.logger import get_logger
 from utilities.screenshots import capture_screenshot
 
@@ -64,8 +65,7 @@ class PageManager:
         self.dashboard_page = DashboardPage(page)
         self.client_page = ClientPage(page)
         self.assignment_page = AssignmentPage(page)
-        # Add new page objects here as the agent builds them out, e.g.:
-        # self.trial_balance_page = TrialBalancePage(page)
+        self.workspace_page = AssignmentWorkspacePage(page)
 
 
 @pytest.fixture
