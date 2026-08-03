@@ -24,6 +24,9 @@ logs/*
 !logs/.gitkeep
 **/logs/
 scripts/
+node_modules/
+package-lock.json
+package.json
 
 # OS
 .DS_Store

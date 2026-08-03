@@ -3,11 +3,12 @@
 Playwright + Pytest automation framework for the AWM (Audit Workflow
 Management) UAT application, built on a self-healing Page Object Model.
 
-This is a **lean starter skeleton**, not a full test suite. It ships with
-a working, fully-implemented Login flow as the reference pattern. See
-[`AGENT_GUIDE.md`](./AGENT_GUIDE.md) for how to explore the live app and
-expand coverage feature by feature — that file is written as direct
-instructions for an AI coding agent (e.g. Cursor) with live browser access.
+This is a Playwright + Pytest automation framework for the AWM (Audit
+Workflow Management) UAT application, built on a self-healing Page Object
+Model. Login, dashboard/logout, client + assignment management, and core
+assignment-workspace flows (materiality, checklist, trial balance,
+sign-off menu, templates, etc.) are implemented. See
+[`AGENT_GUIDE.md`](./AGENT_GUIDE.md) for how to extend coverage further.
 
 ## Structure
 
@@ -18,18 +19,19 @@ src/
     logger.py              # get_logger(__name__) — writes to logs/
     screenshots.py         # capture_screenshot(page, label) — writes to screenshots/, attaches to Allure
     self_healing.py         # resolve_locator() + @self_heal() retry decorator
-  locators/
-    login_locators.py      # example: ordered fallback locator strategies per element
-  pages/
-    base_page.py           # shared safe_click/safe_fill/expect_* — inherit this
-    login_page.py           # reference implementation
-    dashboard_page.py       # stub — expand as you explore
+  locators/                # ordered fallback locator strategies per feature
+  pages/                   # BasePage + feature page objects
   tests/
     conftest.py             # PageManager, browser/context config, screenshot-on-failure hook
-    login_test/test_login.py
+    login_test/
+    dashboard_test/
+    client_test/
+    assignment_test/
+    workflow_test/          # assignment workspace / audit screens
+    profile_test/
 reports/
   allure-results/          # raw results (generated)
-  allure-report/           # generated HTML report
+  allure-report/           # generated HTML report (needs Allure CLI + Java)
 screenshots/               # captured on every failure + key steps
 logs/automation.log        # full run log
 ```
@@ -87,11 +89,26 @@ key steps like pre/post sign-in) land in `screenshots/`.
 
 ## Known limitations
 
-- Only Login is fully implemented. Every other AWM module (dashboard nav,
-  clients, assignments, checklists, trial balance, sign-off, etc.) needs
-  its locator file + page object + test module built out — see
-  `AGENT_GUIDE.md`.
-- `DashboardPage.logout()` is a stub — the logout control location wasn't
-  confirmed against the current app build.
-- No CI workflow file included yet (add `.github/workflows/` once the
-  suite has enough coverage to be worth gating on).
+- **Allure HTML report generation** requires a local Java runtime (`JAVA_HOME`)
+  plus the Allure CLI. `allure-pytest` already writes raw results under
+  `reports/allure-results/` on every run; `make report` / `make report-serve`
+  will fail until Java + Allure CLI are installed (see Setup above).
+- **Create Client** coverage exercises the Basic Info step (load, required-field
+  guard, name boundary) — it does **not** submit a full 4-step client create
+  end-to-end, to avoid polluting UAT with throwaway orgs.
+- **Create Assignment** coverage validates form load, disabled CREATE when
+  empty, and AWM type selection — it does **not** persist a new assignment
+  (dates / EPR / Audit Pack prerequisites are assignment-specific).
+- **Audit workflow** tests open a known UAT assignment
+  (`KNOWN_ASSIGNMENT_NAME`, default `Test AWMS_295 3.08.2026`) and navigate
+  Materiality, Planning Checklist, Risk Database, Budget, Trial Balance,
+  Templates, Client Queries, Audit Journal, Sampling, and Sign-Off menu.
+  Nested submenu items under B3/B4/C* that use `navigate_next` (no direct
+  href) are not deep-linked yet.
+- **Data analytics / system documents / download report** are not covered as
+  dedicated modules — Templates + Sign-Off menu are the reporting surface
+  exercised so far; expand if those screens are required.
+- **Independence / Declaration** post-login redirect is intermittent on UAT;
+  smoke login currently lands on `#/dashboard` for this account but may
+  occasionally route through `#/independence/fill-template`.
+- No CI workflow file included yet (add `.github/workflows/` once desired).
