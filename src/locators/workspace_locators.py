@@ -25,7 +25,9 @@ NAV_MATERIALITY = [
 ]
 
 NAV_PLANNING_CHECKLIST = [
+    lambda p: p.get_by_text("B12.0 - Planning Checklist"),
     lambda p: p.locator("a.sidenav-item").filter(has_text="Planning Checklist"),
+    # Retained only for older UAT builds; live UAT exposes Planning Checklist as B12.0.
     lambda p: p.get_by_text("B11.0 - Planning Checklist"),
 ]
 

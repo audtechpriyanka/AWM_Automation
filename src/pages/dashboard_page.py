@@ -4,6 +4,7 @@ import re
 from config.settings import settings
 from locators import dashboard_locators as loc
 from pages.base_page import BasePage
+from pages.profile_page import ProfilePage
 
 
 class DashboardPage(BasePage):
@@ -15,20 +16,22 @@ class DashboardPage(BasePage):
     def __init__(self, page: Page):
         super().__init__(page)
         self.dashboard_page_url = settings.dashboard_url
+        self._profile_page = ProfilePage(page)
 
     # ---------- element resolvers ----------
 
     def user_menu_button(self):
-        return self.resolve(loc.USER_MENU_BUTTON, "user_menu_button")
+        return self._profile_page.user_menu_button()
 
     def logout_menu_item(self):
         return self.resolve(loc.LOGOUT_MENU_ITEM, "logout_menu_item")
 
     def profile_menu_item(self):
-        return self.resolve(loc.PROFILE_MENU_ITEM, "profile_menu_item")
+        return self._profile_page.profile_menu_item()
+        print("profile menu visisble")
 
     def change_password_menu_item(self):
-        return self.resolve(loc.CHANGE_PASSWORD_MENU_ITEM, "change_password_menu_item")
+        return self._profile_page.change_password_menu_item()
 
     def dashboard_heading(self):
         return self.resolve(loc.DASHBOARD_HEADING, "dashboard_heading")
@@ -75,7 +78,7 @@ class DashboardPage(BasePage):
         self.expect_visible(self.user_menu_button())
 
     def open_user_menu(self):
-        self.safe_click(self.user_menu_button(), "user menu button")
+        self._profile_page.open_user_menu()
         self.expect_visible(self.logout_menu_item())
 
     def logout(self):

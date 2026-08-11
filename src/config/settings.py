@@ -5,6 +5,7 @@ objects or tests. Import `settings` and use its attributes.
 """
 import os
 from dataclasses import dataclass
+from typing import Dict, Tuple
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -36,6 +37,16 @@ class Settings:
     invalid_username: str = os.getenv("INVALID_USERNAME", "")
     invalid_password: str = os.getenv("INVALID_PASSWORD", "")
     old_password: str = os.getenv("OLD_PASSWORD", "")
+    manager_username: str = os.getenv("MANAGER_USERNAME", "")
+    manager_password: str = os.getenv("MANAGER_PASSWORD", "")
+    partner_username: str = os.getenv("PARTNER_USERNAME", "")
+    partner_password: str = os.getenv("PARTNER_PASSWORD", "")
+    org_admin_username: str = os.getenv("ORG_ADMIN_USERNAME", "")
+    org_admin_password: str = os.getenv("ORG_ADMIN_PASSWORD", "")
+
+    profile_image_path: str = os.getenv("PROFILE_IMAGE_PATH") or os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "data", "assets", "default_profile_image.png"
+    )
 
     # Known UAT fixtures used by assignment-workspace / workflow tests.
     # Prefer names over hard-coded IDs — IDs rotate per assignment.
@@ -61,6 +72,16 @@ class Settings:
     @property
     def dashboard_url(self) -> str:
         return f"{self.base_url}{self.dashboard_path}"
+
+    @property
+    def role_credentials(self) -> Dict[str, Tuple[str, str]]:
+        """Credentials for isolated workflow sessions; Org Admin is setup-only."""
+        return {
+            "priyanka": (self.valid_username, self.valid_password),
+            "manager": (self.manager_username, self.manager_password),
+            "partner": (self.partner_username, self.partner_password),
+            "org_admin": (self.org_admin_username, self.org_admin_password),
+        }
 
 
 settings = Settings()

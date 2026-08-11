@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import pytest
-from playwright.sync_api import Page
+from playwright.sync_api import Browser, Page
 
 from config.settings import settings
 from pages.login_page import LoginPage
@@ -12,6 +12,7 @@ from pages.dashboard_page import DashboardPage
 from pages.client_page import ClientPage
 from pages.assignment_page import AssignmentPage
 from pages.workspace_page import AssignmentWorkspacePage
+from pages.profile_page import ProfilePage
 from utilities.logger import get_logger
 from utilities.screenshots import capture_screenshot
 
@@ -66,6 +67,7 @@ class PageManager:
         self.client_page = ClientPage(page)
         self.assignment_page = AssignmentPage(page)
         self.workspace_page = AssignmentWorkspacePage(page)
+        self.profile_page = ProfilePage(page)
 
 
 @pytest.fixture
@@ -81,6 +83,39 @@ def logged_in_pages(pages: PageManager) -> PageManager:
     pages.login_page.login(settings.valid_username, settings.valid_password)
     pages.dashboard_page.is_loaded()
     return pages
+
+
+@pytest.fixture
+def page_as(browser: Browser):
+    """Return cached, isolated authenticated sessions keyed by workflow role."""
+    sessions = {}
+
+    def _page_as(role: str) -> PageManager:
+        if role not in settings.role_credentials:
+            raise ValueError(f"Unknown role '{role}'. Available roles: {', '.join(settings.role_credentials)}")
+        username, password = settings.role_credentials[role]
+        if not username or not password:
+            raise RuntimeError(f"Credentials for workflow role '{role}' are not configured")
+        if role not in sessions:
+            logger.info("Opening isolated workflow session for role=%s", role)
+            context = browser.new_context(
+                viewport={"width": settings.viewport_width, "height": settings.viewport_height},
+                accept_downloads=True,
+            )
+            page = context.new_page()
+            page.set_default_timeout(settings.default_timeout_ms)
+            role_pages = PageManager(page)
+            role_pages.login_page.navigate()
+            role_pages.login_page.login(username, password)
+            role_pages.dashboard_page.is_loaded()
+            sessions[role] = (context, role_pages)
+        return sessions[role][1]
+
+    yield _page_as
+
+    for role, (context, _) in sessions.items():
+        logger.info("Closing isolated workflow session for role=%s", role)
+        context.close()
 
 
 @pytest.fixture

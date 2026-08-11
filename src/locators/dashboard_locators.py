@@ -3,26 +3,10 @@ Locator strategies for the Dashboard / shell (header + sidenav).
 Ordered fallbacks — BasePage.resolve() tries each in order.
 """
 
-USER_MENU_BUTTON = [
-    lambda p: p.locator("button.user-button"),
-    lambda p: p.locator("button").filter(has=p.locator("mat-icon", has_text="keyboard_arrow_down")),
-    lambda p: p.get_by_role("button").filter(has_text="keyboard_arrow_down"),
-]
-
 LOGOUT_MENU_ITEM = [
     lambda p: p.locator("span.logout"),
     lambda p: p.get_by_text("Logout", exact=True),
     lambda p: p.get_by_role("menuitem", name="Logout"),
-]
-
-PROFILE_MENU_ITEM = [
-    lambda p: p.get_by_text("Profile", exact=True),
-    lambda p: p.get_by_role("menuitem", name="Profile"),
-]
-
-CHANGE_PASSWORD_MENU_ITEM = [
-    lambda p: p.get_by_text("Change Password", exact=True),
-    lambda p: p.get_by_role("menuitem", name="Change Password"),
 ]
 
 DECLARATION_MENU_ITEM = [
